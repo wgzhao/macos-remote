@@ -100,13 +100,15 @@ final class H264Decoder {
                 var parameterSetPointers: [UnsafePointer<UInt8>?] = [spsP, ppsP]
                 var parameterSetSizes: [Int] = [sps.count, pps.count]
                 var fmt: CMFormatDescription? = nil
-                let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(allocator: kCFAllocatorDefault,
-                                                                                 parameterSetCount: 2,
-                                                                                 parameterSetPointers: &parameterSetPointers,
-                                                                                 parameterSetSizes: &parameterSetSizes,
-                                                                                 nalUnitHeaderLength: 4,
-                                                                                 extensions: nil,
-                                                                                 formatDescriptionOut: &fmt)
+                // Use withUnsafeBufferPointer to obtain stable pointer for C API
+                let status = parameterSetPointers.withUnsafeBufferPointer { ptr -> OSStatus in
+                    return CMVideoFormatDescriptionCreateFromH264ParameterSets(allocator: kCFAllocatorDefault,
+                                                                                parameterSetCount: 2,
+                                                                                parameterSetPointers: ptr.baseAddress,
+                                                                                parameterSetSizes: &parameterSetSizes,
+                                                                                nalUnitHeaderLength: 4,
+                                                                                formatDescriptionOut: &fmt)
+                }
                 if status == noErr, let fmt = fmt {
                     self.formatDesc = fmt
                     print("Created format description")
