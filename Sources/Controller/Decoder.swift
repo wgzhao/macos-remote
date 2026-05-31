@@ -94,8 +94,8 @@ final class H264Decoder {
     private func createFormatDescription(sps: Data, pps: Data) {
         sps.withUnsafeBytes { (spsPtr: UnsafeRawBufferPointer) in
             pps.withUnsafeBytes { (ppsPtr: UnsafeRawBufferPointer) in
-                let spsP = spsPtr.bindMemory(to: UInt8.self).baseAddress!
-                let ppsP = ppsPtr.bindMemory(to: UInt8.self).baseAddress!
+                let spsP = spsPtr.bindMemory(to: UInt8.self).baseAddress
+                let ppsP = ppsPtr.bindMemory(to: UInt8.self).baseAddress
 
                 var parameterSetPointers: [UnsafePointer<UInt8>?] = [spsP, ppsP]
                 var parameterSetSizes: [Int] = [sps.count, pps.count]
