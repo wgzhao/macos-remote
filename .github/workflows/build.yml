@@ -7,8 +7,15 @@ on:
 
 jobs:
   build:
-    name: Build (macOS)
-    runs-on: macos-latest
+    name: Build per-arch
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-15-arm64
+            arch: arm64
+          - os: macos-15
+            arch: x86_64
 
     steps:
       - name: Checkout repository
@@ -20,11 +27,55 @@ jobs:
           xcodebuild -version || true
           xcrun --show-sdk-path || true
 
-      - name: Make build script executable
-        run: chmod +x scripts/build-universal.sh
+      - name: Build Swift package
+        run: |
+          swift build -c release
+          mkdir -p build/${{ matrix.arch }}
+          if [ -f .build/release/controlled ]; then cp .build/release/controlled build/${{ matrix.arch }}/controlled; fi
+          if [ -f .build/release/controller ]; then cp .build/release/controller build/${{ matrix.arch }}/controller; fi
 
-      - name: Run universal build script
-        run: ./scripts/build-universal.sh both
+      - name: Upload arch binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.arch }}
+          path: build/${{ matrix.arch }}
+
+  merge:
+    name: Merge universal binaries
+    needs: build
+    runs-on: macos-15-arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download arm64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-arm64
+          path: build/arm64
+
+      - name: Download x86_64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-x86_64
+          path: build/x86_64
+
+      - name: Create universal binaries
+        run: |
+          mkdir -p build/universal
+          for name in controlled controller; do
+            ARM_BIN=build/arm64/$name
+            X86_BIN=build/x86_64/$name
+            OUT=build/universal/$name
+            if [ -f "$ARM_BIN" ] && [ -f "$X86_BIN" ]; then
+              lipo -create -output "$OUT" "$ARM_BIN" "$X86_BIN"
+              chmod +x "$OUT"
+            elif [ -f "$ARM_BIN" ]; then
+              cp "$ARM_BIN" "$OUT" && chmod +x "$OUT"
+            elif [ -f "$X86_BIN" ]; then
+              cp "$X86_BIN" "$OUT" && chmod +x "$OUT"
+            fi
+          done
 
       - name: Upload universal binaries
         uses: actions/upload-artifact@v4
