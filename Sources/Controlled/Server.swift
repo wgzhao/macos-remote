@@ -175,19 +175,19 @@ final class RemoteServer {
             let point = CGPoint(x: x, y: y)
             if action == "move" {
                 if let event = CGEvent(mouseEventSource: nil, mouseType: .mouseMoved, mouseCursorPosition: point, mouseButton: .left) {
-                    event.post(tap: .cghidEventTap)
+                    event.post(tap: CGEventTapLocation.cghidEventTap)
                 }
             } else if action == "down" {
                 let event = CGEvent(mouseEventSource: nil, mouseType: .leftMouseDown, mouseCursorPosition: point, mouseButton: .left)
-                event?.post(tap: .cghidEventTap)
+                event?.post(tap: CGEventTapLocation.cghidEventTap)
             } else if action == "up" {
                 let event = CGEvent(mouseEventSource: nil, mouseType: .leftMouseUp, mouseCursorPosition: point, mouseButton: .left)
-                event?.post(tap: .cghidEventTap)
+                event?.post(tap: CGEventTapLocation.cghidEventTap)
             } else if action == "scroll" {
                 let dx = Int32(evt.deltaX ?? 0)
                 let dy = Int32(evt.deltaY ?? 0)
-                if let scrollEvent = CGEvent(scrollWheelEvent2WithWheelCount: 1, wheel1: dy, wheel2: dx, wheel3: 0) {
-                    scrollEvent.post(tap: .cghidEventTap)
+                if let scrollEvent = CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1, wheel1: dy, wheel2: dx, wheel3: 0) {
+                    scrollEvent.post(tap: CGEventTapLocation.cghidEventTap)
                 }
             }
         } else if evt.type == "keyboard" {

@@ -29,14 +29,14 @@ final class H264Encoder {
             return
         }
 
-        // Settings for low-latency, no B-frames
-        VTSessionSetProperty(session, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue)
-        VTSessionSetProperty(session, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse)
-        VTSessionSetProperty(session, kVTCompressionPropertyKey_MaxKeyFrameInterval, NSNumber(value: fps))
-        VTSessionSetProperty(session, kVTCompressionPropertyKey_AverageBitRate, NSNumber(value: bitrate))
+        // Settings for low-latency, no B-frames (use labeled API)
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_RealTime, value: kCFBooleanTrue)
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AllowFrameReordering, value: kCFBooleanFalse)
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_MaxKeyFrameInterval, value: NSNumber(value: fps))
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_AverageBitRate, value: NSNumber(value: bitrate))
 
         // Profile level (baseline -> no B-frames)
-        VTSessionSetProperty(session, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_Baseline_AutoLevel)
+        VTSessionSetProperty(session, key: kVTCompressionPropertyKey_ProfileLevel, value: kVTProfileLevel_H264_Baseline_AutoLevel)
 
         VTCompressionSessionPrepareToEncodeFrames(session)
     }
@@ -85,8 +85,8 @@ final class H264Encoder {
         if isKeyframe, let fmt = CMSampleBufferGetFormatDescription(sampleBuffer) {
             var spsPointer: UnsafePointer<UInt8>?
             var spsSize: Int = 0
-            var spsCount: Int32 = 0
-            var nalLen: Int32 = 0
+            var spsCount: Int = 0
+            var nalLen: Int = 0
             let spsStatus = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(fmt, parameterSetIndex: 0, parameterSetPointerOut: &spsPointer, parameterSetSizeOut: &spsSize, parameterSetCountOut: &spsCount, nalUnitHeaderLengthOut: &nalLen)
             if spsStatus == noErr, let sps = spsPointer {
                 let spsData = Data(bytes: sps, count: spsSize)
