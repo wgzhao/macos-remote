@@ -9,9 +9,6 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="$ROOT_DIR/build"
-XCODEPROJ_DIR="$BUILD_DIR/xcproj"
-PROJECT_FILE_NAME="Package.xcodeproj"
-PROJECT_PATH="$XCODEPROJ_DIR/$PROJECT_FILE_NAME"
 ARM_DERIVED="$BUILD_DIR/derived_arm"
 X86_DERIVED="$BUILD_DIR/derived_x86"
 UNIVERSAL_DIR="$BUILD_DIR/universal"
@@ -39,20 +36,10 @@ else
 fi
 
 mkdir -p "$BUILD_DIR"
-rm -rf "$XCODEPROJ_DIR"
 
-echo "[*] Generating Xcode project from Swift package..."
 cd "$ROOT_DIR"
 if ! command -v swift >/dev/null 2>&1; then
   echo "swift command not found. Install Xcode / Swift toolchain." >&2
-  exit 1
-fi
-
-# Try to generate an Xcode project. If this fails, we abort with guidance.
-if swift package generate-xcodeproj --output "$XCODEPROJ_DIR"; then
-  echo "[*] Xcode project generated at: $XCODEPROJ_DIR"
-else
-  echo "[!] swift package generate-xcodeproj failed. You can open Package.swift in Xcode manually and build the targets there." >&2
   exit 1
 fi
 
@@ -72,18 +59,17 @@ for scheme in "${TARGET_SCHEMES[@]}"; do
 
   echo "- Building arm64..."
   rm -rf "$ARM_DERIVED"
-  if xcodebuild -project "$PROJECT_PATH" -scheme "$scheme" -configuration Release -arch arm64 -derivedDataPath "$ARM_DERIVED" -sdk macosx CODE_SIGNING_ALLOWED=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES ENABLE_BITCODE=NO; then
+  if xcodebuild -scheme "$scheme" -configuration Release -derivedDataPath "$ARM_DERIVED" -package-path "$ROOT_DIR" -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES ENABLE_BITCODE=NO build; then
     echo "  -> arm64 build succeeded"
   else
     echo "  -> arm64 build failed" >&2
-    # Continue; sometimes machines cannot build arm64 (older Xcode), but we prefer to stop because universal cannot be made without one.
     echo "Aborting: arm64 build required to create universal binary." >&2
     exit 1
   fi
 
   echo "- Building x86_64..."
   rm -rf "$X86_DERIVED"
-  if xcodebuild -project "$PROJECT_PATH" -scheme "$scheme" -configuration Release -arch x86_64 -derivedDataPath "$X86_DERIVED" -sdk macosx CODE_SIGNING_ALLOWED=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES ENABLE_BITCODE=NO; then
+  if xcodebuild -scheme "$scheme" -configuration Release -derivedDataPath "$X86_DERIVED" -package-path "$ROOT_DIR" -destination 'platform=macOS,arch=x86_64' CODE_SIGNING_ALLOWED=NO BUILD_LIBRARY_FOR_DISTRIBUTION=YES ENABLE_BITCODE=NO build; then
     echo "  -> x86_64 build succeeded"
   else
     echo "  -> x86_64 build failed. If you're on Apple Silicon without Rosetta, this may be expected." >&2
@@ -120,9 +106,5 @@ done
 echo "\n[*] All done. Universal binaries (or architecture-specific fallbacks) are in: $UNIVERSAL_DIR"
 echo "To run the controlled server: $UNIVERSAL_DIR/Controlled"
 echo "To run the controller client: $UNIVERSAL_DIR/Controller"
-
-echo "Notes:"
-echo " - If swift package generate-xcodeproj fails on your machine, open Package.swift directly in Xcode and build the targets there." 
-echo " - Building x86_64 on an Apple Silicon machine requires Rosetta / appropriate SDK support. If x86_64 build fails, script will still output an arm64-only binary." 
 
 echo "Script finished."

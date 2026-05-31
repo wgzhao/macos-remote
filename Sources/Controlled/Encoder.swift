@@ -67,7 +67,7 @@ final class H264Encoder {
     }
 
     // Convert sampleBuffer (AVCC) to Annex-B and invoke callback
-    private func handleEncodedSampleBuffer(_ sampleBuffer: CMSampleBuffer) {
+    fileprivate func handleEncodedSampleBuffer(_ sampleBuffer: CMSampleBuffer) {
         guard CMSampleBufferDataIsReady(sampleBuffer) else { return }
 
         // Check keyframe

@@ -7,9 +7,9 @@ import CoreVideo
 final class H264Decoder {
     private var sps: Data?
     private var pps: Data?
-    private var formatDesc: CMFormatDescription?
+    fileprivate var formatDesc: CMFormatDescription?
     private var session: VTDecompressionSession?
-    private var displayLayer: AVSampleBufferDisplayLayer
+    fileprivate var displayLayer: AVSampleBufferDisplayLayer
 
     private var buffer = Data()
 
