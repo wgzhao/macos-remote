@@ -104,7 +104,7 @@ final class H264Decoder {
                 let status = parameterSetPointers.withUnsafeBufferPointer { ptr -> OSStatus in
                     return CMVideoFormatDescriptionCreateFromH264ParameterSets(allocator: kCFAllocatorDefault,
                                                                                 parameterSetCount: 2,
-                                                                                parameterSetPointers: ptr.baseAddress,
+                                                                                parameterSetPointers: ptr.baseAddress!,
                                                                                 parameterSetSizes: &parameterSetSizes,
                                                                                 nalUnitHeaderLength: 4,
                                                                                 formatDescriptionOut: &fmt)
