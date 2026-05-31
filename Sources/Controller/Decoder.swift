@@ -92,12 +92,12 @@ final class H264Decoder {
     }
 
     private func createFormatDescription(sps: Data, pps: Data) {
-        sps.withUnsafeBytes { spsPtr in
-            pps.withUnsafeBytes { ppsPtr in
+        sps.withUnsafeBytes { (spsPtr: UnsafeRawBufferPointer) in
+            pps.withUnsafeBytes { (ppsPtr: UnsafeRawBufferPointer) in
                 let spsP = spsPtr.bindMemory(to: UInt8.self).baseAddress!
                 let ppsP = ppsPtr.bindMemory(to: UInt8.self).baseAddress!
 
-                var parameterSetPointers: [UnsafePointer<UInt8>?] = [UnsafePointer<UInt8>(spsP), UnsafePointer<UInt8>(ppsP)]
+                var parameterSetPointers: [UnsafePointer<UInt8>?] = [spsP, ppsP]
                 var parameterSetSizes: [Int] = [sps.count, pps.count]
                 var fmt: CMFormatDescription? = nil
                 let status = CMVideoFormatDescriptionCreateFromH264ParameterSets(allocator: kCFAllocatorDefault,

@@ -85,9 +85,7 @@ final class H264Encoder {
         if isKeyframe, let fmt = CMSampleBufferGetFormatDescription(sampleBuffer) {
             var spsPointer: UnsafePointer<UInt8>?
             var spsSize: Int = 0
-            var spsCount: Int = 0
-            var nalLen: Int = 0
-            let spsStatus = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(fmt, parameterSetIndex: 0, parameterSetPointerOut: &spsPointer, parameterSetSizeOut: &spsSize, parameterSetCountOut: &spsCount, nalUnitHeaderLengthOut: &nalLen)
+            let spsStatus = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(fmt, parameterSetIndex: 0, parameterSetPointerOut: &spsPointer, parameterSetSizeOut: &spsSize, parameterSetCountOut: nil, nalUnitHeaderLengthOut: nil)
             if spsStatus == noErr, let sps = spsPointer {
                 let spsData = Data(bytes: sps, count: spsSize)
                 out.append(contentsOf: [0,0,0,1])
@@ -96,7 +94,7 @@ final class H264Encoder {
 
             var ppsPointer: UnsafePointer<UInt8>?
             var ppsSize: Int = 0
-            let ppsStatus = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(fmt, parameterSetIndex: 1, parameterSetPointerOut: &ppsPointer, parameterSetSizeOut: &ppsSize, parameterSetCountOut: &spsCount, nalUnitHeaderLengthOut: &nalLen)
+            let ppsStatus = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(fmt, parameterSetIndex: 1, parameterSetPointerOut: &ppsPointer, parameterSetSizeOut: &ppsSize, parameterSetCountOut: nil, nalUnitHeaderLengthOut: nil)
             if ppsStatus == noErr, let pps = ppsPointer {
                 let ppsData = Data(bytes: pps, count: ppsSize)
                 out.append(contentsOf: [0,0,0,1])
